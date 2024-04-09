@@ -1,3 +1,4 @@
+package LinkedQueue;
 
 public class LinkedQueue {
     private _LinkedNode head;

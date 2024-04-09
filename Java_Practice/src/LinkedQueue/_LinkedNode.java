@@ -1,3 +1,5 @@
+package LinkedQueue;
+
 public class _LinkedNode {
     private int data;
     private _LinkedNode nextNode;
