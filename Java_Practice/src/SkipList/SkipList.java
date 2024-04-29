@@ -230,7 +230,7 @@ public class SkipList {
                 //clear up the immediately higher pre_headNode
                 if(delete){
                     tmp.val=0;
-                    tmp.down=null;
+                    tmp.down=null;  //the existing tmp.down node doesn't modified, rather the tmp.down points to null
                     tmp.next=null;
                 }
 
@@ -274,6 +274,117 @@ public class SkipList {
             nt.node.next.next=tmp;
             if(higherNewNode!=null) higherNewNode.down=nt.node.next;
             length++;
+        }
+    }
+
+    public void delete_back(int val){
+        if(length==0) return;  //no node
+        else if(length==1){
+            if(head.val==val){
+                head=null;
+                tail_data=null;
+                for(int i=0;i<max_level;i++){
+                    tail_index[i]=null;
+                }
+                length=0;
+            }
+            else{
+                System.out.println("delete_back failed! The value is not in the SkipList");
+            }
+        }
+        else{ //more than one node
+            NodeTrack nt=track_lastEqualOrSmaller(val);
+            //whether the first node to be deleted
+            LinkedNode cur=head;
+            boolean firstNode=true;
+            for(int i=max_level-1;i>=-1;i--){
+                if(i>=0){
+                    if(cur!=nt.track[i]){
+                        firstNode=false;
+                        break;
+                    }
+                    cur=cur.down;
+                }else{  //i==-1   //cur is in the head node in data layer
+                    if(cur!=nt.node){
+                        firstNode=false;
+                    }
+                }
+            }
+            if(firstNode){  //make the 2nd node to be 1st node and supplement its index layer
+                NodeTrack nt_2ndNode=track_lastEqualOrSmaller(cur.next.val);
+                LinkedNode tmp=null;  //record a higher node
+                for(int i=max_level-1;i>=0;i--){
+                    if(i==max_level-1){
+                        if(nt_2ndNode.track[i].val!=nt_2ndNode.node.val){
+                            head=new LinkedNode(nt_2ndNode.node.val); //new head of the SkipList
+                            if(nt.track[i].next!=null){
+                                head.next=nt.track[i].next;
+                            }
+                            tmp=head;
+                        }else{
+                            tmp=nt_2ndNode.track[i];
+                        }
+                    }else{
+                        if(nt_2ndNode.track[i].val!=nt_2ndNode.node.val){
+                            if(tmp!=null) tmp.down=new LinkedNode(nt_2ndNode.node.val);
+                            if(nt.track[i].next!=null) tmp.down.next=nt.track[i].next;
+                            tmp=tmp.down;
+                        }else{
+                            tmp=nt_2ndNode.track[i];
+                        }
+                    }
+                }
+                length--;
+            }
+            else{//not the first node to be deleted
+                if(nt.node.val==val){  //find the last node with value equal to val
+                    cur=head;
+                    //delete the node in the data layer
+                    while(cur.down!=null){
+                        cur=cur.down;
+                    } // cur is the head node in the data layer
+                    while(cur.next!=null && cur.next!=nt.node){
+                        cur=cur.next;
+                    } //cur is the node immediately before the node to be deleted in the data layer
+                    if(nt.node.next!=null)cur.next=nt.node.next;  //delete the node in the data layer
+                    else cur.next=null;
+                    //delete the directly linked nodes in index layers
+                    int i=0;  //layer index
+                    int j=i+1; //layer No.
+                    if(nt.track[i].down==nt.node){
+                        cur=head;
+                        while(j++<max_level){
+                            cur=cur.down;
+                        } // cur is the head node in the i+1th index layer
+                        while(cur.next!=null && cur.next!=nt.track[i]){
+                            cur=cur.next;
+                        } //cur is the node immediately before nt.track[i] in the i+1th index layer
+                        //delete the node in the 1th index layer
+                        if(nt.track[i].next!=null) cur.next=nt.track[i].next;
+                        else cur.next=null;
+                    }
+                    //delete the node from 2th to max_level index layer
+                    for(i=1;i<max_level;i++){
+                        j=i+1;
+                        if(nt.track[i].down==nt.track[i-1]){
+                            cur=head;
+                            while(j++<max_level){
+                                cur=cur.down;
+                            } // cur is the head node in the i+1th index layer
+                            while(cur.next!=null && cur.next!=nt.track[i]){
+                                cur=cur.next;
+                            } //cur is the node before the node to be deleted in the i+1th index layer
+                            //delete the node in the 1th index layer
+                            if(nt.track[i].next!=null) cur.next=nt.track[i].next;
+                            else cur.next=null;
+                        }
+                    }
+                    length--;
+                }
+                else{
+                    System.out.println("delete_back failed! The value is not in the SkipList");
+                }
+            }
         }
     }
 
@@ -339,12 +450,12 @@ public class SkipList {
         s1.push_back(7);
         s1.push_back(8);
         s1.push_back(9);
-        s1.printAddress_lastNode();
+//        s1.printAddress_lastNode();
         s1.push_back(9);
         s1.push_back(9);
         s1.push_back(9);
         s1.push_back(9);
-        s1.printAddress_lastNode();
+//        s1.printAddress_lastNode();
         s1.push_back(10);
         s1.push_back(11);
         s1.push_back(12);
@@ -371,6 +482,22 @@ public class SkipList {
 
         System.out.println("insert a new node with value 17");
         s1.insert_back(17);
+        s1.print_nodes();
+
+        System.out.println("delete the last node with value 17");
+        s1.delete_back(17);
+        s1.print_nodes();
+
+        System.out.println("delete the last node with value 0");
+        s1.delete_back(0);
+        s1.print_nodes();
+
+        System.out.println("delete the last node with value 21");
+        s1.delete_back(21);
+        s1.print_nodes();
+
+        System.out.println("delete the last node with value 9");
+        s1.delete_back(9);
         s1.print_nodes();
     }
 }
