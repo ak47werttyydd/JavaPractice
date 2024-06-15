@@ -21,80 +21,138 @@ public class LinkBasedBinaryTree {
     }
 
     //return the node to be searched
-    public LinkedNode search(int data){
+    public List<LinkedNode> search(int data){
         LinkedNode cur=root;
+        List<LinkedNode> result=new ArrayList<>();
         while(cur!=null){
-            if(data==cur.data)return cur;
-            if(data<cur.data)cur=cur.left;
-            if(data>cur.data)cur=cur.right;
+            if(data==cur.data){
+                result.add(cur);
+                cur=cur.right; //go right
+            }
+            else if(data<cur.data)cur=cur.left;
+            else cur=cur.right; //data>cur.data
         }
-        return null;
+        return !result.isEmpty() ? result : null ;
     }
+
+    //return the result[0]=parent, result[1]=node with data of the node to be searched
+//    public LinkedNode[] search_parent(int data){
+//        LinkedNode cur=root;
+//        LinkedNode prev=null;
+//        LinkedNode[] result=new LinkedNode[2];
+//        while(cur!=null){
+//            if(data==cur.data){ //found
+//                result[0]=prev;
+//                result[1]=cur;
+//                return result;
+//            }
+//            //not found, keep searching
+//            prev=cur;
+//            if(data<cur.data)cur=cur.left;
+//            if(data>cur.data)cur=cur.right;
+//        }
+//        return null;
+//    }
+
+    //return the result[0]=parent, result[1]=node with data of the node to be searched
+//    public List<LinkedNode> search_parent(int data){
+//        LinkedNode cur=root;
+//        LinkedNode prev=null;
+//        List<LinkedNode> result=new ArrayList<>();
+//        while(cur!=null) {
+//            if (data == cur.data) { //found
+//                result.add(prev);
+//                result.add(cur);
+//                prev = cur;
+//                cur = cur.right; //go right
+//            } else {//not found
+//                prev = cur;
+//                if (data < cur.data) cur = cur.left;
+//                else cur = cur.right;
+//            }
+//        }
+//        return !result.isEmpty()?result:null;
+//    }
 
     //return the result[0]=parent, result[1]=node with data of the node to be searched
     public LinkedNode[] search_parent(int data){
         LinkedNode cur=root;
         LinkedNode prev=null;
         LinkedNode[] result=new LinkedNode[2];
-        while(cur!=null){
-            if(data==cur.data){ //found
+        while(cur!=null) {
+            if (data == cur.data) { //found
                 result[0]=prev;
                 result[1]=cur;
                 return result;
+            } else {//not found
+                prev = cur;
+                if (data < cur.data) cur = cur.left;
+                else cur = cur.right;
             }
-            //not found, keep searching
-            prev=cur;
-            if(data<cur.data)cur=cur.left;
-            if(data>cur.data)cur=cur.right;
         }
         return null;
     }
 
+    //delete all data with the same value
     public void delete(int data){
-        //empty tree
-        if(root==null)return;
-        //find the node to be deleted
-        LinkedNode[] parent_current=search_parent(data);
-        if(parent_current==null)return; //not found
-        //found
-        LinkedNode parent=parent_current[0];
-        LinkedNode cur=parent_current[1];
-        //case 1: current has no child
-        if(cur.left==null&&cur.right==null) {
-            if (parent == null) { //cur is root
-                root = null;
-            }else {  //cur is leaf
-                if (parent.left == cur) parent.left = null;
-                if (parent.right == cur) parent.right = null;
-            }
-        }
-        //case 2: current has one child
-        else if((cur.left==null&&cur.right!=null)||(cur.left!=null&&cur.right==null)){
-            if(parent==null) { //cur is root
-                if (cur.left != null) root = cur.left;
-                if (cur.right != null) root = cur.right;
-            }else{ //cur is not root
-                if(parent.left==cur){
-                    parent.left=cur.left!=null?cur.left:cur.right;
-                }else{ //parent.right==cur
-                    parent.right=cur.left!=null?cur.left:cur.right;
+        while(true){
+            //empty tree
+            if (root == null) return;
+            //find the node to be deleted
+            LinkedNode[] parent_current = search_parent(data);
+            if (parent_current == null) return; //not found
+            //found
+            LinkedNode parent = parent_current[0];
+            LinkedNode cur = parent_current[1];
+            //case 1: current has no child
+            if (cur.left == null && cur.right == null) {
+                if (parent == null) { //cur is root
+                    root = null;
+                } else {  //cur is leaf
+                    if (parent.left == cur) parent.left = null;
+                    if (parent.right == cur) parent.right = null;
                 }
             }
-        }
-        //case 3: current has two children
-        else if(cur.left!=null&&cur.right!=null){
-            LinkedNode min=get_min(cur.right); //find the minimum node in the right subtree
-            delete(min.data); //delete the minimum node (it has no left child, so case 1 or 2 apply)
-            cur.data=min.data; //replace the current node with the minimum node
+            //case 2: current has one child
+            else if ((cur.left == null && cur.right != null) || (cur.left != null && cur.right == null)) {
+                if (parent == null) { //cur is root
+                    if (cur.left != null) root = cur.left;
+                    if (cur.right != null) root = cur.right;
+                } else { //cur is not root
+                    if (parent.left == cur) {
+                        parent.left = cur.left != null ? cur.left : cur.right;
+                    } else { //parent.right==cur
+                        parent.right = cur.left != null ? cur.left : cur.right;
+                    }
+                }
+            }
+            //case 3: current has two children
+            else if (cur.left != null && cur.right != null) {
+                LinkedNode[] parent_and_min = get_parent_min(cur, cur.right); //locate the minimum node in the right subtree
+                delete(parent_and_min[0], parent_and_min[1]); //delete the minimum node
+                cur.data = parent_and_min[1].data; //replace the current node with the minimum node
+            }
         }
     }
+
+    public void delete(LinkedNode parent, LinkedNode cur){
+        LinkedNode child;
+        if(cur.left!=null)child=cur.left;
+        else if(cur.right!=null) child=cur.right;
+        else child=null;
+
+        if(parent.left==cur)parent.left=child;
+        else parent.right=child;
+    }
+
+
 
     public void insert(int data){
         if(root==null) root=new LinkedNode(data);
         else{
             LinkedNode cur=root;
             while(true){
-                if(data<=cur.data){  // if data is less than or equal to current node's data, go left or put it left
+                if(data<cur.data){  // if data is less than or equal to current node's data, go left or put it left
                     if(cur.left==null){
                         cur.left=new LinkedNode(data);
                         return;
@@ -102,7 +160,7 @@ public class LinkBasedBinaryTree {
                         cur=cur.left;
                     }
                 }
-                if(data>cur.data){ //if data is greater than current node's data, go right or put it right
+                if(data>=cur.data){ //if data is greater than current node's data, go right or put it right
                     if(cur.right==null){
                         cur.right=new LinkedNode(data);
                         return;
@@ -114,12 +172,15 @@ public class LinkBasedBinaryTree {
         }
     }
 
-    public LinkedNode get_min(LinkedNode start){
+    public LinkedNode[] get_parent_min(LinkedNode parent_start,LinkedNode start){
         LinkedNode cur=start;
+        LinkedNode prev=parent_start;
         while(cur.left!=null){
+            prev=cur;
             cur=cur.left;
         }
-        return cur;
+        LinkedNode[] result={prev,cur};
+        return result;
     }
 
     public void preOrder_traverse(LinkedNode node){
@@ -178,6 +239,13 @@ public class LinkBasedBinaryTree {
         }
     }
 
+    public int height(LinkedNode node){
+        if(node==null)return 0;
+        int left_height=height(node.left);
+        int right_height=height(node.right);
+        return Math.max(left_height,right_height)+1;
+    }
+
     public static void main(String[] args) {
         LinkBasedBinaryTree tree=new LinkBasedBinaryTree();
         tree.insert(5);
@@ -188,18 +256,34 @@ public class LinkBasedBinaryTree {
         tree.insert(6);
         tree.insert(8);
         tree.insert(1);
+        tree.insert(9);
+        tree.insert(8);
+        tree.insert(7);
         System.out.println("Level-wise traversal: ");
         tree.print_levelwise();
+        System.out.println();
 //        System.out.println("Preorder traversal: ");
 //        tree.preOrder_traverse();
 //        System.out.println("Inorder traversal: ");
 //        tree.inOrder_traverse();
 //        System.out.println("Postorder traversal: ");
 //        tree.postOrder_traverse();
+//        List<LinkedNode> pairs=tree.search_parent(8);  //good
+//        int i=1;
+//        if(pairs!=null){
+//            for(LinkedNode node:pairs){
+//                if(i%2==1)System.out.println("parent: "+node.data);
+//                else System.out.println("current: "+node.data);
+//                i++;
+//            }
+//        }
         tree.delete(8);
-        tree.delete(2);
+//        tree.delete(2);
         tree.print_levelwise();
-        tree.delete(5);
-        tree.print_levelwise();
+
+//        tree.delete(5);
+//        tree.print_levelwise();
+//        System.out.println("Inorder traversal is: ");
+//        tree.inOrder_traverse();
     }
 }
