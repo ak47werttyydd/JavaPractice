@@ -45,7 +45,7 @@ public class Hash_BidirectionalLinkedList {
     private int capacity; //bucket array size
     private int filled_buckets; //number of buckets with at least one node
     private int size; //number of nodes.
-    private double loadFactor; //untaken buckets over capacity
+    private double loadFactor; //taken buckets over capacity
     private final double MAX_LOAD_FACTOR = 0.75;
     LinkedNode sentinel; //sentinel node for the head of the linked list;
 
